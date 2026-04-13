@@ -1,13 +1,77 @@
-# USV Path Planning (CovPlan)
+#  USV Coverage Path Planning (基于 CovPlan)
 
-This project implements a simple coverage path planning for unmanned surface vehicles (USV).
+项目简介
+本项目基于开源库 **CovPlan**，实现了无人船（Unmanned Surface Vehicle, USV）在二维区域内的覆盖路径规划（Coverage Path Planning, CPP）。
 
-## Method
-- Input: polygon area (area.txt)
-- Output: coverage path
+通过输入多边形区域数据，算法能够自动生成覆盖路径，实现对目标区域的完整扫描。
 
-## Result
+---
+
+## 项目目标
+- 实现基础覆盖路径规划算法复现
+- 理解路径规划在无人系统中的应用
+- 完成从“数据输入 → 路径生成 → 可视化输出”的完整流程
+
+---
+
+##  方法说明
+本项目使用 CovPlan 提供的覆盖路径规划算法：
+
+- 输入：多边形区域（`area.txt`）
+- 输出：覆盖路径轨迹（栅格扫描路径）
+- 可视化：基于 `matplotlib` 进行路径展示
+
+---
+
+## 实验结果
+
+### 基础覆盖路径规划
 ![result](result.png)
 
-## How to run
+可以看到算法成功对区域进行分层扫描，实现完整覆盖。
+
+---
+
+##  问题与分析
+在实验过程中发现：
+
+- 在规则矩形区域中，算法存在数值不稳定问题（如除零 warning）
+- 对输入数据（坐标顺序、范围）较为敏感
+- 使用 UTM 坐标转换时可能出现范围限制问题
+
+---
+
+##  项目改进（已完成）
+
+### 1. 输入区域优化
+- 采用不规则多边形替代简单矩形
+- 提高路径稳定性
+
+###  2. 可视化输出
+- 自动生成路径图（result.png）
+- 支持结果保存与展示
+
+---
+
+## 进一步优化方向
+
+### 方向1：障碍物路径规划（推荐）
+在区域中加入障碍物，实现：
+- 路径避障
+- 更接近真实无人船场景
+
+### 方向2：算法改进
+- A* / Dijkstra路径优化
+- 路径平滑（Bezier / 样条曲线）
+
+### 方向3：多区域对比实验
+- 不同形状区域测试
+- 覆盖效率分析
+
+---
+
+## 运行方法
+
+```bash
+conda activate usv
 python test_covplan.py
