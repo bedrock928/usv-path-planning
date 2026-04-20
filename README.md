@@ -69,43 +69,9 @@
 ---
 
 ## 运行方式
-
 ### 1. 生成 CovPlan 航点
 ```bash
 python export_covplan_waypoints.py
-###2. 查看航点图
+### 2. 查看航点图
+```bash
 python plot_waypoints.py
-###3. 运行 Otter 跟踪仿真
-python main.py
-
-运行后选择：
-
-3
-
-即 Otter unmanned surface vehicle (USV)
-
-###项目结构
-usv-path-planning/
-├── covplan_area.txt
-├── covplan_waypoints.txt
-├── export_covplan_waypoints.py
-├── plot_waypoints.py
-├── covplan_waypoints_plot.png
-├── otter_tracking_covplan_v1.png
-├── README.md
-###当前结论
-
-本项目已经成功完成 CovPlan 与 Otter USV 的第一版联调，实现了从覆盖路径规划到船模跟踪仿真的初步验证。
-
-###后续优化方向
-
-后续可以继续从以下几个方向优化：
-
-使用 LOS guidance 或 Pure Pursuit 替代简单航向切换策略
-对航点进行平滑处理，减少拐点振荡
-引入障碍物场景与更复杂区域
-比较不同路径规划算法与跟踪控制方法的效果
-项目性质说明
-
-###本项目属于“开源项目复现 + 船模联调实验”的初步研究工作。
-重点在于完成路径规划与船模跟踪之间的联通，并分析联调过程中的问题与改进方向。
