@@ -82,6 +82,6 @@
 ```bash
 conda activate usv
 python test_covplan.py
-
+---
 ## 下一步计划
 下一步准备将 CovPlan 生成的路径点导出为局部坐标航点，并进一步接入 PythonVehicleSimulator 中的 Otter USV 模型，尝试完成路径规划与船模轨迹跟踪的联调实验。
