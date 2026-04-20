@@ -48,6 +48,19 @@
 即完成了覆盖路径规划与船模跟踪的第一版联调。
 
 ---
+## CovPlan 导出航点图
+
+![CovPlan waypoints](covplan_waypoints_plot.png)
+
+上图展示了由 CovPlan 输出并转换后的局部航点，整体呈现折返式覆盖路径特征。
+
+---
+
+## Otter USV 跟踪结果
+
+![Otter tracking](otter_tracking_covplan_v1.png)
+
+上图展示了 Otter USV 对 CovPlan 导出路径的第一版跟踪结果。
 
 ## 本周主要问题
 
