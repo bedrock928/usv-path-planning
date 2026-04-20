@@ -1,77 +1,75 @@
-#  USV Coverage Path Planning (基于 CovPlan)
+# USV Coverage Path Planning Based on CovPlan
 
-项目简介
-本项目基于开源库 **CovPlan**，实现了无人船（Unmanned Surface Vehicle, USV）在二维区域内的覆盖路径规划（Coverage Path Planning, CPP）。
+## 项目简介
+本项目基于开源库 **CovPlan** 和 **PythonVehicleSimulator**，完成了无人船（USV）覆盖路径规划与船模轨迹跟踪的初步联调。
 
-通过输入多边形区域数据，算法能够自动生成覆盖路径，实现对目标区域的完整扫描。
+项目实现了从：
+- 区域输入
+- 覆盖路径生成
+- 路径点导出
+- 局部坐标转换
+- Otter USV 跟踪仿真
+
+的完整流程。
 
 ---
 
 ## 项目目标
-- 实现基础覆盖路径规划算法复现
-- 理解路径规划在无人系统中的应用
-- 完成从“数据输入 → 路径生成 → 可视化输出”的完整流程
+本项目的主要目标包括：
+
+1. 复现 CovPlan 的基础覆盖路径规划功能  
+2. 将规划结果转换为船模可用的局部 North-East 航点  
+3. 在 PythonVehicleSimulator 中驱动 Otter USV 对路径进行跟踪  
+4. 分析联调过程中的控制效果与存在问题  
 
 ---
 
-##  方法说明
-本项目使用 CovPlan 提供的覆盖路径规划算法：
+## 方法流程
 
-- 输入：多边形区域（`area.txt`）
-- 输出：覆盖路径轨迹（栅格扫描路径）
-- 可视化：基于 `matplotlib` 进行路径展示
+### 1. 覆盖路径规划
+使用 CovPlan 对给定区域进行覆盖路径规划，输入为经纬度多边形边界文件。
 
----
+### 2. 航点导出
+将 CovPlan 输出的经纬度路径点转换为局部 North-East 坐标，并保存为 `covplan_waypoints.txt`。
 
-## 实验结果
-
-### 基础覆盖路径规划
-![result](result.png)
-
-可以看到算法成功对区域进行分层扫描，实现完整覆盖。
+### 3. 船模跟踪
+在 PythonVehicleSimulator 中调用 Otter USV 模型，基于简单航向参考更新策略进行路径跟踪。
 
 ---
 
-##  问题与分析
-在实验过程中发现：
+## CovPlan 导出航点图
+![CovPlan waypoints](covplan_waypoints_plot.png)
 
-- 在规则矩形区域中，算法存在数值不稳定问题（如除零 warning）
-- 对输入数据（坐标顺序、范围）较为敏感
-- 使用 UTM 坐标转换时可能出现范围限制问题
+上图展示了由 CovPlan 输出并转换后的局部航点，整体呈现折返式覆盖路径特征。
 
 ---
 
-##  项目改进
+## Otter USV 跟踪结果
+![Otter tracking](otter_tracking_covplan_v1.png)
 
-### 1. 输入区域优化
-- 采用不规则多边形替代简单矩形
-- 提高路径稳定性
-
-###  2. 可视化输出
-- 自动生成路径图（result.png）
-- 支持结果保存与展示
+上图展示了 Otter USV 对 CovPlan 导出路径的第一版跟踪结果。
 
 ---
 
-## 进一步优化方向
+## 实验结果分析
+实验表明，本项目已经成功完成了：
 
-### 方向1：障碍物路径规划
-在区域中加入障碍物，实现：
-- 路径避障
-- 更接近真实无人船场景
+- CovPlan 覆盖路径生成  
+- 路径点导出与坐标转换  
+- Otter USV 船模读取航点并进行跟踪  
 
-### 方向2：算法改进
-- A* / Dijkstra路径优化
-- 路径平滑（Bezier / 样条曲线）
+同时也发现当前系统仍存在以下问题：
 
-### 方向3：多区域对比实验
-- 不同形状区域测试
-- 覆盖效率分析
+- 拐点附近存在明显振荡  
+- 航点较密时容易绕圈或过冲  
+- 当前基于简单航向参考更新的控制策略仍较粗糙  
+
+因此，本项目可以认为已经完成了路径规划与船模仿真的**初步闭环验证**，但在控制性能上仍有进一步优化空间。
 
 ---
 
-## 运行方法
+## 运行方式
 
+### 1. 生成 CovPlan 航点
 ```bash
-conda activate usv
-python test_covplan.py
+python export_covplan_waypoints.py
