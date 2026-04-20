@@ -3,14 +3,13 @@
 ## 项目简介
 本项目基于开源库 **CovPlan** 和 **PythonVehicleSimulator**，完成了无人船（USV）覆盖路径规划与船模轨迹跟踪的初步联调。
 
-项目实现了从：
+项目实现了从以下流程的基本打通：
+
 - 区域输入
 - 覆盖路径生成
 - 路径点导出
 - 局部坐标转换
 - Otter USV 跟踪仿真
-
-的完整流程。
 
 ---
 
@@ -38,6 +37,7 @@
 ---
 
 ## CovPlan 导出航点图
+
 ![CovPlan waypoints](covplan_waypoints_plot.png)
 
 上图展示了由 CovPlan 输出并转换后的局部航点，整体呈现折返式覆盖路径特征。
@@ -45,6 +45,7 @@
 ---
 
 ## Otter USV 跟踪结果
+
 ![Otter tracking](otter_tracking_covplan_v1.png)
 
 上图展示了 Otter USV 对 CovPlan 导出路径的第一版跟踪结果。
@@ -52,26 +53,83 @@
 ---
 
 ## 实验结果分析
-实验表明，本项目已经成功完成了：
 
-- CovPlan 覆盖路径生成  
-- 路径点导出与坐标转换  
-- Otter USV 船模读取航点并进行跟踪  
+实验展示，本项目已经成功完成了：
+
+- CovPlan 覆盖路径生成
+- 路径点导出与坐标转换
+- Otter USV 船模读取航点并进行跟踪
 
 同时也发现当前系统仍存在以下问题：
 
-- 拐点附近存在明显振荡  
-- 航点较密时容易绕圈或过冲  
-- 当前基于简单航向参考更新的控制策略仍较粗糙  
+- 拐点附近存在明显振荡
+- 航点较密时容易绕圈或过冲
+- 当前基于简单航向参考更新的控制策略仍较粗糙
 
-因此，本项目可以认为已经完成了路径规划与船模仿真的**初步闭环验证**，但在控制性能上仍有进一步优化空间。
+总体来看，当前系统已经验证了路径规划结果可用于船模跟踪仿真，但由于控制器仍采用较为简单的航向参考更新策略，因此在拐点和密集航点区域的跟踪性能仍有待提高。
+
+因此，本项目可以认为已经完成了路径规划与船模仿真之间的初步闭环验证，但在控制性能上仍有进一步优化空间。
 
 ---
 
 ## 运行方式
+
 ### 1. 生成 CovPlan 航点
 ```bash
 python export_covplan_waypoints.py
+```
+
 ### 2. 查看航点图
 ```bash
 python plot_waypoints.py
+```
+
+### 3. 运行 Otter 跟踪仿真
+```bash
+python main.py
+```
+
+运行后选择：
+
+```text
+3
+```
+
+即 `Otter unmanned surface vehicle (USV)`。
+
+---
+
+## 项目结构
+
+```text
+usv-path-planning/
+├── covplan_area.txt
+├── covplan_waypoints.txt
+├── export_covplan_waypoints.py
+├── plot_waypoints.py
+├── covplan_waypoints_plot.png
+├── otter_tracking_covplan_v1.png
+└── README.md
+```
+
+---
+
+## 当前结论
+
+本项目已经成功完成 CovPlan 与 Otter USV 的第一版联调，实现了从覆盖路径规划到船模跟踪仿真的初步验证。
+
+---
+
+## 后续优化方向
+
+- 使用 LOS guidance 或 Pure Pursuit 替代简单航向切换策略
+- 对航点进行平滑处理，减少拐点振荡
+- 引入障碍物场景与更复杂区域
+- 比较不同路径规划算法与跟踪控制方法的效果
+
+---
+
+## 项目性质说明
+
+本项目属于“开源项目复现 + 船模联调实验”的初步研究工作。  
+重点在于完成路径规划与船模跟踪之间的联通，并分析联调过程中的问题与改进方向。
