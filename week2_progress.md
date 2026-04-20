@@ -121,4 +121,4 @@ python main.py
 
 即 `Otter unmanned surface vehicle (USV)`。
   
-5. 进一步完善项目文档、图示与阶段总结，使项目更适合作为科研/保研展示材料
+
