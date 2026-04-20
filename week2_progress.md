@@ -95,5 +95,30 @@ CovPlan 原始输出为经纬度路径点，不能直接输入船模，需要额
 
 1. 尝试使用 LOS guidance 或 Pure Pursuit 等更稳定的引导方法  
 2. 对 CovPlan 导出的航点进行平滑与进一步稀疏化处理  
-3. 对比不同抽样步长下的跟踪效果  
-4. 进一步完善项目文档、图示与阶段总结，使项目更适合作为科研/保研展示材料
+3. 对比不同抽样步长下的跟踪效果
+ ## 运行方式
+
+### 1. 生成 CovPlan 航点
+```bash
+python export_covplan_waypoints.py
+```
+
+### 2. 查看航点图
+```bash
+python plot_waypoints.py
+```
+
+### 3. 运行 Otter 跟踪仿真
+```bash
+python main.py
+```
+
+运行后选择：
+
+```text
+3
+```
+
+即 `Otter unmanned surface vehicle (USV)`。
+  
+5. 进一步完善项目文档、图示与阶段总结，使项目更适合作为科研/保研展示材料
