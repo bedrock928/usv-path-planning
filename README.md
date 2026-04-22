@@ -128,7 +128,27 @@ usv-path-planning/
 - 比较不同路径规划算法与跟踪控制方法的效果
 
 ---
+## v1 与 v2 对比分析
 
+## Otter USV 跟踪结果
+
+### v1：基础联调版
+![Otter tracking v1](otter_tracking_covplan_v1.png)
+
+上图展示了 Otter USV 对 CovPlan 导出路径的第一版跟踪结果。
+
+### v2：前视点升级版
+![Otter tracking v2](otter_tracking_covplan_v2.png)
+
+上图展示了在引入前视点（look-ahead waypoint）后的 Otter USV 跟踪结果。
+
+## v1 与 v2 对比分析
+
+- **v1：基础联调**  
+  使用“当前航点—目标航向”直接更新策略，能够实现 CovPlan 路径与船模跟踪之间的初步联通，但在拐点附近存在明显振荡与绕行现象。
+
+- **v2：前视点升级**  
+  在基础策略上引入前视点（look-ahead waypoint）思想后，轨迹在部分转弯区域更加平滑，整体路径趋势也更贴近 CovPlan 输出的折返扫描路径。但在顶部折返区域仍存在一定程度的过冲与振荡，说明当前控制策略仍有优化空间。
 ## 项目性质说明
 
 本项目属于“开源项目复现 + 船模联调实验”的初步研究工作。  
