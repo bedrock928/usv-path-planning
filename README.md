@@ -1,101 +1,44 @@
-# USV Coverage Path Planning Based on CovPlan
+# USV Coverage Path Planning and Tracking Simulation
 
 ## 项目简介
-本项目基于开源库 **CovPlan** 和 **PythonVehicleSimulator**，完成了无人船（USV）覆盖路径规划与船模轨迹跟踪的初步联调。
 
-项目实现了从以下流程的基本打通：
+本项目围绕无人船（USV）覆盖路径规划与船模轨迹跟踪展开，基于 **CovPlan** 与 **PythonVehicleSimulator** 完成了从区域覆盖路径规划、航点导出、坐标转换到 Otter USV 船模跟踪仿真的完整流程。
 
-- 区域输入
-- 覆盖路径生成
-- 路径点导出
-- 局部坐标转换
-- Otter USV 跟踪仿真
+项目主要完成了以下工作：
 
----
+1. 复现 CovPlan 覆盖路径规划流程；
+2. 将 CovPlan 输出路径点转换为局部 North-East 坐标；
+3. 将路径点接入 PythonVehicleSimulator 中的 Otter USV 模型；
+4. 实现无人船对规划航点的初步跟踪仿真；
+5. 尝试固定前视点、简化 LOS、航点平滑与航点稀疏化等小型优化；
+6. 引入路径长度、平滑度、最大曲率变化、跟踪误差和能耗代理等评测指标；
+7. 进一步引入真实湖泊边界 GeoJSON 数据，完成真实水域局部边界下的补充实验。
 
-## 项目目标
-本项目的主要目标包括：
-
-1. 复现 CovPlan 的基础覆盖路径规划功能  
-2. 将规划结果转换为船模可用的局部 North-East 航点  
-3. 在 PythonVehicleSimulator 中驱动 Otter USV 对路径进行跟踪  
-4. 分析联调过程中的控制效果与存在问题  
+本项目属于“开源项目复现 + 路径规划与船模联调实验”的初步研究工作，重点在于打通路径规划与船模仿真之间的技术流程，并分析不同策略对跟踪效果的影响。
 
 ---
 
-## 方法流程
+## 技术路线
 
-### 1. 覆盖路径规划
-使用 CovPlan 对给定区域进行覆盖路径规划，输入为经纬度多边形边界文件。
-
-### 2. 航点导出
-将 CovPlan 输出的经纬度路径点转换为局部 North-East 坐标，并保存为 `covplan_waypoints.txt`。
-
-### 3. 船模跟踪
-在 PythonVehicleSimulator 中调用 Otter USV 模型，基于简单航向参考更新策略进行路径跟踪。
-
----
-
-## CovPlan 导出航点图
-
-![CovPlan waypoints](covplan_waypoints_plot.png)
-
-上图展示了由 CovPlan 输出并转换后的局部航点，整体呈现折返式覆盖路径特征。
-
----
-
-## Otter USV 跟踪结果
-
-![Otter tracking](otter_tracking_covplan_v1.png)
-
-上图展示了 Otter USV 对 CovPlan 导出路径的第一版跟踪结果。
-
----
-
-## 实验结果分析
-
-实验展示，本项目已经成功完成了：
-
-- CovPlan 覆盖路径生成
-- 路径点导出与坐标转换
-- Otter USV 船模读取航点并进行跟踪
-
-同时也发现当前系统仍存在以下问题：
-
-- 拐点附近存在明显振荡
-- 航点较密时容易绕圈或过冲
-- 当前基于简单航向参考更新的控制策略仍较粗糙
-
-总体来看，当前系统已经验证了路径规划结果可用于船模跟踪仿真，但由于控制器仍采用较为简单的航向参考更新策略，因此在拐点和密集航点区域的跟踪性能仍有待提高。
-
-因此，本项目可以认为已经完成了路径规划与船模仿真之间的初步闭环验证，但在控制性能上仍有进一步优化空间。
-
----
-
-## 运行方式
-
-### 1. 生成 CovPlan 航点
-```bash
-python export_covplan_waypoints.py
-```
-
-### 2. 查看航点图
-```bash
-python plot_waypoints.py
-```
-
-### 3. 运行 Otter 跟踪仿真
-```bash
-python main.py
-```
-
-运行后选择：
+项目整体流程如下：
 
 ```text
-3
+真实/规则区域边界
+        ↓
+CovPlan 覆盖路径规划
+        ↓
+路径点导出
+        ↓
+经纬度坐标 → 局部 North-East 坐标
+        ↓
+航点稀疏化 / 平滑处理
+        ↓
+Otter USV 船模读取航点
+        ↓
+PythonVehicleSimulator 跟踪仿真
+        ↓
+结果图与定量指标评估
 ```
-
-即 `Otter unmanned surface vehicle (USV)`。
 
 ---
 
@@ -106,67 +49,397 @@ usv-path-planning/
 ├── README.md
 ├── week1_progress.md
 ├── week2_progress.md
-├── export_covplan_waypoints.py
-├── plot_waypoints.py
-├── evaluate_metrics.py
-├── geojson_to_covplan.py
+│
+├── covplan_area.txt
 ├── covplan_area_real_small.txt
 ├── covplan_waypoints.txt
+│
+├── selected_lake.geojson
 ├── selected_lake_small.geojson
-├──covplan_waypoints_real_sparse.png
-├── otter_tracking_real_sparse.png
-├── metrics_real_sparse.txt
-├── covplan_waypoints_real_scaled.png
-├── otter_tracking_real_scaled.png
+│
+├── export_covplan_waypoints.py
+├── geojson_to_covplan.py
+├── plot_waypoints.py
+├── evaluate_metrics.py
+│── covplan_waypoints_real_sparse.png
+│── otter_tracking_real_sparse.png
+│── metrics_real_sparse.txt
+│── covplan_waypoints_real_scaled.png
+│── otter_tracking_real_scaled.png
 ```
 
 ---
 
+## 环境配置
+
+建议使用 Conda 环境运行本项目。
+
+```bash
+conda activate usv
+```
+
+主要依赖包括：
+
+```bash
+pip install numpy scipy matplotlib covplan
+```
+
+本项目还使用了：
+
+- CovPlan：用于覆盖路径规划；
+- PythonVehicleSimulator：用于 Otter USV 船模仿真；
+- QGIS：用于真实湖泊边界数据裁剪与导出；
+- GeoJSON 数据：用于真实水域边界实验。
+
 ---
+
+## 运行方式
+
+### 1. 生成 CovPlan 航点
+
+```bash
+conda activate usv
+cd C:\Users\16222\Desktop\usv-path-planning
+python export_covplan_waypoints.py
+```
+
+运行后会生成：
+
+```text
+covplan_waypoints.txt
+```
+
+该文件保存了转换后的局部 North-East 航点。
+
+---
+
+### 2. 查看航点图
+
+```bash
+python plot_waypoints.py
+```
+
+该脚本用于查看 CovPlan 输出航点的二维分布情况。
+
+---
+
+### 3. 运行 Otter USV 跟踪仿真
+
+进入 PythonVehicleSimulator 主程序目录：
+
+```bash
+cd C:\Users\16222\Desktop\PythonVehicleSimulator-master\src\python_vehicle_simulator
+python main.py
+```
+
+运行后选择：
+
+```text
+3
+```
+
+即选择：
+
+```text
+Otter unmanned surface vehicle (USV)
+```
+
+仿真完成后会输出 Vehicle states 图，用于观察无人船轨迹、速度、姿态角和航向角等状态变化。
+
+---
+
+### 4. 运行评测指标
+
+```bash
+python C:\Users\16222\Desktop\usv-path-planning\evaluate_metrics.py
+```
+
+评测脚本会输出：
+
+- Reference path length
+- Tracked path length
+- Smoothness
+- Max curvature change
+- Mean tracking error
+- RMSE tracking error
+- Max tracking error
+- Energy proxy
+
+同时会保存结果到：
+
+```text
+metrics_result.txt
+```
+
+---
+
+## 规则区域基础实验
+
+在基础实验中，首先使用规则测试区域验证 CovPlan 与 Otter USV 的联调流程。该部分主要目标是验证：
+
+1. CovPlan 能够生成覆盖路径；
+2. 路径点能够转换为局部 North-East 坐标；
+3. Otter USV 能够读取航点并进行跟踪；
+4. 船模仿真结果能够被保存和评估。
+
+基础实验完成了从路径规划到船模仿真的第一版闭环验证。
+
+---
+
+## 跟踪策略迭代
+
+### v1：基础联调版
+
+v1 采用“当前航点—目标航向”直接更新策略。该方法能够实现 CovPlan 路径与 Otter 船模之间的初步联通，但在路径拐点和局部密集航点区域存在明显振荡、绕圈和过冲现象。
+
+---
+
+### v2：固定前视点升级版
+
+v2 在 v1 的基础上引入固定前视点（look-ahead waypoint）思想，使无人船不再严格指向当前航点，而是朝向前方若干个航点形成的参考方向进行跟踪。
+
+实验结果表明，固定前视点方法能够在一定程度上改善转弯区域的轨迹平滑性，但在折返区域仍存在较明显的过冲与绕行。
+
+---
+
+### v3：简化 LOS 升级版
+
+v3 进一步采用基于前视距离的简化 LOS 引导方法，使前视目标的选取由固定索引改为根据当前位置动态确定。
+
+实验结果表明，简化 LOS 方法能够进一步改善轨迹连续性，但由于当前控制框架仍然基于较简单的 headingAutopilot，折返区域的振荡问题并未完全消除。
+
+---
+
+### A1：航点平滑与稀疏化
+
+A1 尝试对 CovPlan 导出的航点进行平滑和稀疏化处理，使路径更符合船舶运动特性。
+
+实验发现，航点平滑能够改善轨迹连续性，但过度平滑可能削弱原始覆盖路径的折返几何特征。航点稀疏化则可以降低船模在短时间内频繁切换目标航点的压力，提高仿真实验的可执行性。
+
+---
+
+## 评测指标设计
+
+为了避免仅依赖路径图进行主观判断，项目进一步加入了定量评测指标。
+
+### 1. 路径长度
+
+用于衡量参考路径和实际跟踪轨迹的长度差异。
+
+```text
+Reference path length
+Tracked path length
+```
+
+若实际轨迹明显长于参考路径，通常说明存在绕行、过冲或反复修正。
+
+---
+
+### 2. 平滑度
+
+使用转角平方和作为简单平滑度指标。数值越小，说明轨迹越平滑。
+
+需要注意的是，平滑度较小并不一定意味着跟踪精度更高。船模轨迹可能因为动力学惯性而变得更圆滑，但同时偏离原始参考路径。
+
+---
+
+### 3. 最大曲率变化
+
+用于衡量路径或轨迹在转弯处的剧烈程度。数值越大，说明路径中存在更强的急转弯或曲率变化。
+
+---
+
+### 4. 跟踪误差
+
+使用轨迹点到参考航点的最近距离近似计算跟踪误差，包括：
+
+```text
+Mean tracking error
+RMSE tracking error
+Max tracking error
+```
+
+其中 RMSE 能够更明显地反映较大偏差点的影响。
+
+---
+
+### 5. 简单能耗代理指标
+
+由于当前项目未建立真实推进功率模型，因此使用速度和偏航角速度构造简单能耗代理指标：
+
+```text
+Energy proxy
+```
+
+该指标主要用于不同版本之间的相对比较，不代表真实物理能耗。
+
+---
+
+## 规则区域实验结果示例
+
+在一组规则区域实验中，A1 航点平滑版本得到如下结果：
+
+| 指标 | 数值 |
+|---|---:|
+| Reference path length | 44.573 m |
+| Tracked path length | 76.345 m |
+| Reference smoothness | 4.896759 |
+| Tracked smoothness | 0.062850 |
+| Reference max curvature change | 0.188912 |
+| Tracked max curvature change | 0.039841 |
+| Mean tracking error | 2.800 m |
+| RMSE tracking error | 3.190 m |
+| Max tracking error | 6.688 m |
+| Energy proxy | 34.085868 |
+
+该结果说明，船模实际轨迹比参考路径更长，存在一定绕行与修正动作。同时，实际轨迹的平滑度指标小于参考路径，说明船模由于动力学特性和惯性作用，其运动轨迹被“走圆了”。这并不代表跟踪更准确，而是说明在轨迹平滑性与几何保持能力之间存在权衡。
+
+---
+
 ## 真实湖泊边界补充实验
 
-为增强项目的实际场景意义，进一步引入公开 GeoJSON 水体边界数据作为真实水域输入。实验中首先通过 QGIS 选取湖泊局部边界，并将其导出为 GeoJSON 文件；随后将边界坐标转换为 CovPlan 输入格式，生成覆盖路径航点。
+为增强项目的实际场景意义，进一步引入公开 GeoJSON 水体边界数据作为真实水域输入。
 
-由于原始真实边界尺度较大，直接生成的路径长度超出了当前 Otter USV 小尺度仿真平台的适用范围，因此进一步进行了局部裁剪、尺度缩放与航点稀疏化处理。处理后的路径保留了真实边界的局部几何特征，同时降低了航点密度，使其更适合船模跟踪仿真。
+实验流程如下：
 
-### 真实边界稀疏化航点
+1. 从公开 GeoJSON 水体数据中选取湖泊边界；
+2. 使用 QGIS 选取单个湖泊并进行局部裁剪；
+3. 将裁剪后的湖泊边界导出为 GeoJSON 文件；
+4. 使用 `geojson_to_covplan.py` 将 GeoJSON 边界转换为 CovPlan 输入格式；
+5. 使用 CovPlan 生成覆盖路径；
+6. 将路径点转换为局部 North-East 坐标；
+7. 对路径进行尺度缩放与航点稀疏化；
+8. 将处理后的航点接入 Otter USV 船模；
+9. 使用评测指标分析真实边界场景下的跟踪效果。
+
+---
+
+## 真实边界航点结果
 
 ![Real sparse waypoints](covplan_waypoints_real_sparse.png)
 
-### 真实边界 Otter 跟踪结果
-
-![Real sparse tracking](otter_tracking_real_sparse.png)
-
-稀疏化前，真实数据实验的参考路径长度为 1159.058 m，平均跟踪误差为 17.165 m，RMSE 为 18.245 m，最大误差为 26.628 m。稀疏化后，参考路径长度降低至 368.193 m，平均跟踪误差降低至 12.318 m，RMSE 降低至 13.284 m，最大误差降低至 20.565 m。结果表明，航点稀疏化能够提升真实边界场景下路径跟踪实验的可执行性。
-
-不过，由于当前仿真时间为 200 s，实际航迹长度为 136.744 m，仍小于参考路径长度 368.193 m，因此系统尚未完成完整路径跟踪。后续可通过延长仿真时间、进一步优化航点密度，以及引入更稳定的 LOS / Pure Pursuit 引导方法继续改进。
-### v1：基础联调版
-![Otter tracking v1](otter_tracking_covplan_v1.png)
-
-v1 采用“当前航点—目标航向”直接更新策略，能够实现 CovPlan 路径与 Otter 船模之间的初步联通，但在拐点和局部密集航点区域存在明显振荡与绕行现象。
-
-### v2：固定前视点升级版
-![Otter tracking v2](otter_tracking_covplan_v2.png)
-
-v2 在 v1 的基础上引入固定前视点（look-ahead waypoint）思想，使无人船不再严格朝向当前航点，而是朝向前方若干个航点形成的参考方向进行跟踪。实验结果表明，v2 在部分转弯区域的轨迹连续性有所改善，但顶部折返区域仍存在较明显的过冲与绕行。
-
-### v3：简化 LOS 升级版
-![Otter tracking v3](otter_tracking_covplan_v3_final.png)
-
-v3 进一步采用基于前视距离的简化 LOS 引导方法，使前视目标的选取由固定索引改为根据当前位置动态确定。相比 v2，v3 的轨迹连续性进一步改善，顶部折返区域的绕行范围有所减小，说明动态前视目标的选取对轨迹平滑性具有一定积极作用。但在折返区域仍存在一定振荡现象，表明当前控制器仍需进一步优化。
+上图为真实湖泊局部边界经过裁剪、缩放和航点稀疏化后生成的 CovPlan 航点结果。该路径保留了真实水域局部边界的非规则几何特征，同时将航点数量控制在适合船模跟踪的范围内。
 
 ---
 
-## 版本对比总结
+## 真实边界 Otter 跟踪结果
 
-整体来看，项目已经完成了从 CovPlan 路径规划到 Otter 船模跟踪仿真的完整联调流程。随着 v1 基础联调版、v2 固定前视点版到 v3 简化 LOS 版的逐步优化，轨迹平滑性有所提升，但在折返区域仍存在明显的控制改进空间。
+![Real sparse tracking](otter_tracking_real_sparse.png)
 
-从实验结果可以看出：
+上图为 Otter USV 对真实湖泊局部边界航点的跟踪仿真结果。可以看出，船模能够根据真实数据生成的航点进行连续运动，说明真实边界数据已经成功接入“覆盖路径规划—船模跟踪仿真”流程。
 
-- **v1** 主要完成了路径规划结果与船模跟踪之间的基础联通；
-- **v2** 通过固定前视点方法，在一定程度上改善了转弯区域的轨迹平滑性；
-- **v3** 通过基于前视距离的简化 LOS 引导策略，使路径跟踪过程中的轨迹连续性进一步提升，但整体控制性能仍有优化空间。
-## 项目性质说明
+不过，由于真实边界路径存在较多折返和急转弯，当前基于 headingAutopilot 的简单跟踪策略仍会出现回环、过冲和转弯振荡现象。
+
+---
+
+## 真实数据实验指标对比
+
+### 真实边界初始版本
+
+| 指标 | 数值 |
+|---|---:|
+| Reference path length | 1841.646 m |
+| Tracked path length | 136.903 m |
+| Mean tracking error | 21.574 m |
+| RMSE tracking error | 22.657 m |
+| Max tracking error | 30.437 m |
+| Energy proxy | 96.452888 |
+
+该版本说明真实边界数据能够接入流程，但参考路径长度过大，明显超出了 200 s 仿真时间内船模可完成的航程。
+
+---
+
+### 真实边界缩放版本
+
+| 指标 | 数值 |
+|---|---:|
+| Reference path length | 1159.058 m |
+| Tracked path length | 136.922 m |
+| Mean tracking error | 17.165 m |
+| RMSE tracking error | 18.245 m |
+| Max tracking error | 26.628 m |
+| Energy proxy | 96.478823 |
+
+经过局部裁剪和尺度缩放后，真实数据实验的误差有所下降，但参考路径仍然明显长于 200 s 内船模可完成的距离。
+
+---
+
+### 真实边界稀疏化版本
+
+| 指标 | 数值 |
+|---|---:|
+| Reference path length | 368.193 m |
+| Tracked path length | 136.744 m |
+| Reference smoothness | 87.615571 |
+| Tracked smoothness | 0.117057 |
+| Reference max curvature change | 0.030999 |
+| Tracked max curvature change | 0.011158 |
+| Mean tracking error | 12.318 m |
+| RMSE tracking error | 13.284 m |
+| Max tracking error | 20.565 m |
+| Energy proxy | 96.220930 |
+
+与前一版本相比，航点稀疏化后：
+
+- 参考路径长度由 1159.058 m 降低至 368.193 m；
+- 平均跟踪误差由 17.165 m 降低至 12.318 m；
+- RMSE 由 18.245 m 降低至 13.284 m；
+- 最大跟踪误差由 26.628 m 降低至 20.565 m。
+
+结果表明，航点稀疏化能够提升真实边界场景下路径跟踪实验的可执行性。
+
+---
+
+## 真实数据实验结论
+
+真实湖泊边界补充实验表明，本项目已经能够将真实水域边界数据接入 CovPlan-Otter 联调流程，完成从真实边界提取、局部裁剪、尺度缩放、航点稀疏化到船模跟踪仿真的完整流程。
+
+同时，实验也表明，真实边界场景下的路径跟踪难度明显高于规则区域实验。真实水域边界具有非规则几何特征，CovPlan 生成的覆盖路径往往包含较多折返段和急转弯，对当前简单航点跟踪控制策略提出了更高要求。
+
+航点稀疏化能够有效降低参考路径长度和跟踪误差，但由于当前仿真时间为 200 s，实际航迹长度仍小于参考路径长度，因此系统尚未实现完整高精度覆盖跟踪。后续需要进一步优化航点密度、仿真时长和引导控制策略。
+
+---
+
+## 项目主要成果
+
+本项目已经完成以下成果：
+
+1. 成功复现 CovPlan 覆盖路径规划流程；
+2. 实现 CovPlan 输出路径点到局部 North-East 坐标的转换；
+3. 将路径点接入 PythonVehicleSimulator 中的 Otter USV 模型；
+4. 实现从路径规划到船模跟踪仿真的初步闭环；
+5. 尝试固定前视点、简化 LOS、参考航向变化率限制、航点平滑与稀疏化等小型优化；
+6. 构建路径长度、平滑度、曲率变化、跟踪误差和能耗代理等评测指标；
+7. 引入真实湖泊边界 GeoJSON 数据，完成真实水域局部场景实验；
+8. 对不同实验版本的优缺点进行了定量与定性分析。
+
+---
+
+## 当前不足
+
+项目当前仍存在以下不足：
+
+1. 当前 Otter 跟踪控制策略仍较简单，主要基于 headingAutopilot 和航点切换逻辑；
+2. 在路径折返和急转弯区域仍存在绕行、过冲和振荡现象；
+3. 真实边界实验中参考路径仍较长，200 s 仿真时间不足以完成完整路径跟踪；
+4. 当前能耗指标仅为代理指标，并不代表真实推进系统能耗；
+5. 当前尚未引入真实海流、动态障碍物和复杂环境约束。
+
+---
+
+## 后续优化方向
+
+后续可以从以下几个方向继续改进：
+
+1. 引入更规范的 LOS guidance 或 Pure Pursuit 引导方法；
+2. 对 CovPlan 输出路径进行更合理的航点平滑与曲率约束处理；
+3. 加入船舶最小转弯半径或最大航向变化率约束；
+4. 进一步优化航点稀疏化策略，使其兼顾覆盖完整性与可跟踪性；
+5. 加入固定方向海流、高风险区或移动障碍物等环境因素；
+6. 增加不同算法或不同参数下的对比实验；
+7. 将能耗代理指标进一步扩展为更接近真实推进功率的估计模型。
+
+---
 
 ## 项目总结
 
@@ -176,4 +449,4 @@ v3 进一步采用基于前视距离的简化 LOS 引导方法，使前视目标
 
 此外，项目还引入真实湖泊边界 GeoJSON 数据，完成了从真实边界提取、局部裁剪、尺度缩放、航点稀疏化到 Otter 跟踪仿真的补充实验。该部分验证了系统对真实几何边界输入的适应能力，也暴露出复杂路径下控制器精度不足的问题。
 
-总体来看，本项目属于“开源项目复现 + 路径规划与船模联调实验”的初步研究工作，已经完成了较完整的技术闭环。后续可进一步引入更规范的 LOS guidance、Pure Pursuit、路径平滑和动态环境因素，以提升无人船在复杂真实场景下的路径跟踪性能。
+总体来看，本项目属于“开源项目复现 + 路径规划与船模联调实验”的初步研究工作，已经形成了较完整的技术闭环。后续可进一步引入更规范的 LOS guidance、Pure Pursuit、路径平滑和动态环境因素，以提升无人船在复杂真实场景下的路径跟踪性能。
