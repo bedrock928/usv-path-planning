@@ -67,7 +67,244 @@ usv-path-planning/
 │── covplan_waypoints_real_scaled.png
 │── otter_tracking_real_scaled.png
 ```
+## 核心代码说明
 
+本项目主要代码由 4 个脚本组成，分别负责真实边界转换、CovPlan 航点导出、航点可视化和结果评测。
+
+| 文件名 | 作用 |
+|---|---|
+| `geojson_to_covplan.py` | 将 QGIS 导出的真实湖泊边界 GeoJSON 文件转换为 CovPlan 可读取的 `txt` 边界文件 |
+| `export_covplan_waypoints.py` | 调用 CovPlan 生成覆盖路径，并将经纬度路径点转换为局部 North-East 航点 |
+| `plot_waypoints.py` | 绘制导出的 CovPlan 航点，用于检查路径形状和尺度是否合理 |
+| `evaluate_metrics.py` | 读取参考航点和船模仿真轨迹，计算路径长度、平滑度、曲率变化、跟踪误差和能耗代理指标 |
+
+---
+
+## 代码运行流程
+
+### 1. GeoJSON 边界转换
+
+首先使用 QGIS 从真实湖泊数据中裁剪出局部水域边界，并导出为：
+
+```text
+selected_lake_small.geojson
+```
+
+然后运行：
+
+```bash
+python geojson_to_covplan.py
+```
+
+该脚本会生成：
+
+```text
+covplan_area_real_small.txt
+```
+
+该文件是 CovPlan 的输入区域边界文件，格式为：
+
+```text
+lat lon
+lat lon
+lat lon
+...
+NaN NaN
+```
+
+---
+
+### 2. CovPlan 航点生成与坐标转换
+
+运行：
+
+```bash
+python export_covplan_waypoints.py
+```
+
+该脚本完成以下工作：
+
+1. 读取 `covplan_area_real_small.txt`；
+2. 调用 CovPlan 生成覆盖路径；
+3. 将经纬度路径点转换为局部 North-East 坐标；
+4. 对真实区域进行尺度缩放；
+5. 对航点进行稀疏化处理；
+6. 保存最终船模可读取的航点文件。
+
+输出文件为：
+
+```text
+covplan_waypoints.txt
+```
+
+其中核心处理逻辑包括：
+
+```python
+# 经纬度转局部 North-East 坐标
+north = (op[:, 0] - lat0) * meters_per_deg_lat
+east = (op[:, 1] - lon0) * meters_per_deg_lon
+
+raw_ne = np.column_stack((north, east))
+
+# 缩放到适合小尺度 USV 仿真的范围
+scale = 0.01
+raw_ne = raw_ne * scale
+```
+
+真实边界路径点较密，因此进一步进行航点稀疏化：
+
+```python
+def downsample_by_distance(wps, min_dist=12.0, max_points=12):
+    if len(wps) < 2:
+        return wps
+
+    out = [wps[0]]
+    last = wps[0]
+
+    for p in wps[1:]:
+        if np.linalg.norm(p - last) >= min_dist:
+            out.append(p)
+            last = p
+
+    if not np.allclose(out[-1], wps[-1]):
+        out.append(wps[-1])
+
+    out = np.array(out)
+
+    if len(out) > max_points:
+        idx = np.linspace(0, len(out) - 1, max_points).astype(int)
+        out = out[idx]
+
+    return out
+```
+
+---
+
+### 3. 航点可视化
+
+运行：
+
+```bash
+python plot_waypoints.py
+```
+
+该脚本读取：
+
+```text
+covplan_waypoints.txt
+```
+
+并绘制二维航点图，用于检查：
+
+- 航点是否生成成功；
+- 路径尺度是否合理；
+- 航点是否过密；
+- 是否适合接入 Otter USV 船模。
+
+---
+
+### 4. Otter USV 船模跟踪
+
+进入 PythonVehicleSimulator 主程序目录：
+
+```bash
+cd C:\Users\16222\Desktop\PythonVehicleSimulator-master\src\python_vehicle_simulator
+python main.py
+```
+
+运行后输入：
+
+```text
+3
+```
+
+选择：
+
+```text
+Otter unmanned surface vehicle (USV)
+```
+
+船模主循环会读取 `covplan_waypoints.txt` 中的航点，并根据当前无人船位置更新参考航向，实现基础航点跟踪。
+
+---
+
+### 5. 评测指标计算
+
+仿真结束后运行：
+
+```bash
+python C:\Users\16222\Desktop\usv-path-planning\evaluate_metrics.py
+```
+
+该脚本读取：
+
+```text
+covplan_waypoints.txt
+simData_otter.csv
+```
+
+并计算以下指标：
+
+| 指标 | 含义 |
+|---|---|
+| Reference path length | 参考路径长度 |
+| Tracked path length | 实际跟踪轨迹长度 |
+| Smoothness | 平滑度，基于转角平方和 |
+| Max curvature change | 最大曲率变化 |
+| Mean tracking error | 平均跟踪误差 |
+| RMSE tracking error | 均方根跟踪误差 |
+| Max tracking error | 最大跟踪误差 |
+| Energy proxy | 简单能耗代理指标 |
+
+其中跟踪误差通过实际轨迹点到参考航点的最近距离近似计算：
+
+```python
+tree = cKDTree(reference)
+dist, _ = tree.query(trajectory)
+
+mean_err = np.mean(dist)
+rmse_err = np.sqrt(np.mean(dist ** 2))
+max_err = np.max(dist)
+```
+
+---
+
+## 关键代码逻辑总结
+
+本项目代码的核心并不是单独实现一个复杂控制器，而是完成以下几个模块之间的联通：
+
+```text
+GeoJSON 真实边界
+        ↓
+CovPlan 输入格式
+        ↓
+CovPlan 覆盖路径
+        ↓
+局部 North-East 航点
+        ↓
+航点缩放与稀疏化
+        ↓
+Otter USV 船模跟踪
+        ↓
+定量指标评估
+```
+
+其中最关键的代码工作包括：
+
+1. **真实边界数据格式转换**  
+   将 GeoJSON 多边形外边界转换为 CovPlan 可读取的 `lat lon` 文本格式。
+
+2. **坐标系统转换**  
+   将经纬度路径点转换为局部 North-East 平面坐标，使其能够被船模仿真系统使用。
+
+3. **航点后处理**  
+   对真实边界生成的密集航点进行缩放和稀疏化，使其适配当前 Otter USV 小尺度仿真平台。
+
+4. **船模主循环改造**  
+   将默认固定航向控制改为基于导入航点的跟踪控制。
+
+5. **结果量化评估**  
+   通过路径长度、平滑度、曲率变化、跟踪误差和能耗代理等指标，对不同版本实验结果进行比较。
 ---
 
 ## 环境配置
