@@ -133,7 +133,6 @@ usv-path-planning/
 为增强项目的实际场景意义，进一步引入公开 GeoJSON 水体边界数据作为真实水域输入。实验中首先通过 QGIS 选取湖泊局部边界，并将其导出为 GeoJSON 文件；随后将边界坐标转换为 CovPlan 输入格式，生成覆盖路径航点。
 
 由于原始真实边界尺度较大，直接生成的路径长度超出了当前 Otter USV 小尺度仿真平台的适用范围，因此进一步进行了局部裁剪、尺度缩放与航点稀疏化处理。处理后的路径保留了真实边界的局部几何特征，同时降低了航点密度，使其更适合船模跟踪仿真。
-
 ### 真实边界稀疏化航点
 
 ![Real sparse waypoints](results/covplan_waypoints_real_sparse.png)
@@ -141,6 +140,7 @@ usv-path-planning/
 ### 真实边界 Otter 跟踪结果
 
 ![Real sparse tracking](results/otter_tracking_real_sparse.png)
+
 
 稀疏化前，真实数据实验的参考路径长度为 1159.058 m，平均跟踪误差为 17.165 m，RMSE 为 18.245 m，最大误差为 26.628 m。稀疏化后，参考路径长度降低至 368.193 m，平均跟踪误差降低至 12.318 m，RMSE 降低至 13.284 m，最大误差降低至 20.565 m。结果表明，航点稀疏化能够提升真实边界场景下路径跟踪实验的可执行性。
 
