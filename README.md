@@ -103,29 +103,24 @@ python main.py
 
 ```text
 usv-path-planning/
-├── covplan_area.txt
-├── covplan_waypoints.txt
+├── README.md
+├── week1_progress.md
+├── week2_progress.md
 ├── export_covplan_waypoints.py
 ├── plot_waypoints.py
-├── covplan_waypoints_plot.png
-├── otter_tracking_covplan_v1.png
-└── README.md
+├── evaluate_metrics.py
+├── geojson_to_covplan.py
+├── covplan_area_real_small.txt
+├── covplan_waypoints.txt
+├── selected_lake_small.geojson
+├──covplan_waypoints_real_sparse.png
+├── otter_tracking_real_sparse.png
+├── metrics_real_sparse.txt
+├── covplan_waypoints_real_scaled.png
+├── otter_tracking_real_scaled.png
 ```
 
 ---
-
-## 当前结论
-
-本项目已经成功完成 CovPlan 与 Otter USV 的第一版联调，实现了从覆盖路径规划到船模跟踪仿真的初步验证。
-
----
-
-## 后续优化方向
-
-- 使用 LOS guidance 或 Pure Pursuit 替代简单航向切换策略
-- 对航点进行平滑处理，减少拐点振荡
-- 引入障碍物场景与更复杂区域
-- 比较不同路径规划算法与跟踪控制方法的效果
 
 ---
 ## 真实湖泊边界补充实验
