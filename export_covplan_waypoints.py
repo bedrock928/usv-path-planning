@@ -3,7 +3,7 @@ import covplan
 import utm
 
 # 1) CovPlan 参数
-input_file = r"C:\Users\16222\Desktop\usv-path-planning\covplan_area.txt"
+input_file = r"C:\Users\16222\Desktop\usv-path-planning\covplan_area_real_small.txt"
 
 # 这些参数先用保守设置，后面再调
 num_hd = 0
@@ -41,6 +41,10 @@ east = (op[:, 1] - lon0) * meters_per_deg_lon
 
 raw_ne = np.column_stack((north, east))
 
+# 缩放到适合小尺度船模仿真的范围
+scale = 0.01
+raw_ne = raw_ne * scale
+
 # 去掉几乎重复的点
 if len(raw_ne) > 1:
     diff = np.linalg.norm(np.diff(raw_ne, axis=0), axis=1)
@@ -60,10 +64,64 @@ print(op[:10])
 
 print("First 10 converted NE waypoints:")
 print(waypoints[:10])
-# 6) 保存成你主循环正在读取的文件
-output_file = r"C:\Users\16222\Desktop\usv-path-planning\covplan_waypoints.txt"
-np.savetxt(output_file, waypoints, fmt="%.3f")
+def smooth_waypoints(wps, alpha=0.15, iters=3):
+    out = wps.copy()
+    for _ in range(iters):
+        new = out.copy()
+        new[1:-1] = (1 - 2 * alpha) * out[1:-1] + alpha * out[:-2] + alpha * out[2:]
+        out = new
+    return out
+def truncate_by_length(wps, max_length=150.0):
+    if len(wps) < 2:
+        return wps
 
+    out = [wps[0]]
+    total = 0.0
+
+    for i in range(1, len(wps)):
+        seg_len = np.linalg.norm(wps[i] - wps[i - 1])
+
+        if total + seg_len > max_length:
+            break
+
+        out.append(wps[i])
+        total += seg_len
+
+    return np.array(out)
+
+output_file = r"C:\Users\16222\Desktop\usv-path-planning\covplan_waypoints.txt"
+def downsample_by_distance(wps, min_dist=8.0, max_points=40):
+    """
+    航点稀疏化：
+    1. 先按最小距离筛选航点
+    2. 如果航点还是太多，再强制限制最大航点数
+    """
+    if len(wps) < 2:
+        return wps
+
+    # 第一步：按距离稀疏化
+    out = [wps[0]]
+    last = wps[0]
+
+    for p in wps[1:]:
+        if np.linalg.norm(p - last) >= min_dist:
+            out.append(p)
+            last = p
+
+    if not np.allclose(out[-1], wps[-1]):
+        out.append(wps[-1])
+
+    out = np.array(out)
+
+    # 第二步：如果点还是太多，强制抽样到 max_points 个以内
+    if len(out) > max_points:
+        idx = np.linspace(0, len(out) - 1, max_points).astype(int)
+        out = out[idx]
+
+    return out
+waypoints = downsample_by_distance(waypoints, min_dist=12.0, max_points=12)
+np.savetxt(output_file, waypoints, fmt="%.3f")
+print("Saved simulator waypoints:", len(waypoints))
 print("CovPlan raw points:", len(op))
 print("Saved simulator waypoints:", len(waypoints))
-print("Output file:", output_file)
+print("Output file:",output_file)
