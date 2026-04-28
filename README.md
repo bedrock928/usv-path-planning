@@ -136,11 +136,11 @@ usv-path-planning/
 
 ### 真实边界稀疏化航点
 
-![Real sparse waypoints](results/covplan_waypoints_real_sparse.png)
+![Real sparse waypoints](covplan_waypoints_real_sparse.png)
 
 ### 真实边界 Otter 跟踪结果
 
-![Real sparse tracking](results/otter_tracking_real_sparse.png)
+![Real sparse tracking](otter_tracking_real_sparse.png)
 
 稀疏化前，真实数据实验的参考路径长度为 1159.058 m，平均跟踪误差为 17.165 m，RMSE 为 18.245 m，最大误差为 26.628 m。稀疏化后，参考路径长度降低至 368.193 m，平均跟踪误差降低至 12.318 m，RMSE 降低至 13.284 m，最大误差降低至 20.565 m。结果表明，航点稀疏化能够提升真实边界场景下路径跟踪实验的可执行性。
 
