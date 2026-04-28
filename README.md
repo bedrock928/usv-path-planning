@@ -427,11 +427,15 @@ metrics_result.txt
 
 ### v1：基础联调版
 
+![v1 tracking result](otter_tracking_covplan_v1.png)
+
 v1 采用“当前航点—目标航向”直接更新策略。该方法能够实现 CovPlan 路径与 Otter 船模之间的初步联通，但在路径拐点和局部密集航点区域存在明显振荡、绕圈和过冲现象。
 
 ---
 
 ### v2：固定前视点升级版
+
+![v2 tracking result](otter_tracking_covplan_v2.png)
 
 v2 在 v1 的基础上引入固定前视点（look-ahead waypoint）思想，使无人船不再严格指向当前航点，而是朝向前方若干个航点形成的参考方向进行跟踪。
 
@@ -440,6 +444,8 @@ v2 在 v1 的基础上引入固定前视点（look-ahead waypoint）思想，使
 ---
 
 ### v3：简化 LOS 升级版
+
+![v3 tracking result](otter_tracking_covplan_v3_final.png)
 
 v3 进一步采用基于前视距离的简化 LOS 引导方法，使前视目标的选取由固定索引改为根据当前位置动态确定。
 
@@ -452,7 +458,6 @@ v3 进一步采用基于前视距离的简化 LOS 引导方法，使前视目标
 A1 尝试对 CovPlan 导出的航点进行平滑和稀疏化处理，使路径更符合船舶运动特性。
 
 实验发现，航点平滑能够改善轨迹连续性，但过度平滑可能削弱原始覆盖路径的折返几何特征。航点稀疏化则可以降低船模在短时间内频繁切换目标航点的压力，提高仿真实验的可执行性。
-
 ---
 
 ## 评测指标设计
